@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Anek</title>
+<title>Anek </title>
 <style>
 body {
     margin: 0;
