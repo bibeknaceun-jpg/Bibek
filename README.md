@@ -1,2 +1,221 @@
-# Bibek
-12345
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Anek</title>
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #ff5f8a, #ff8fb1);
+    color: white;
+    transition: background 0.5s;
+}
+
+/* HEARTS */
+.heart {
+    position: absolute;
+    color: rgba(255,255,255,0.35);
+    font-size: 20px;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+}
+@keyframes floatUp {
+    from { transform: translateY(100vh) scale(1); opacity: 0; }
+    20% { opacity: 0.8; }
+    to { transform: translateY(-120vh) scale(1.6); opacity: 0; }
+}
+
+/* CENTER CONTENT */
+.center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+.center.show { opacity: 1; }
+
+h1 {
+    font-weight: 400;
+    margin-bottom: 30px;
+}
+
+.options {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+}
+
+button {
+    padding: 14px 34px;
+    font-size: 1.1rem;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.good {
+    background: white;
+    color: #ff4f7b;
+}
+
+.ok {
+    background: rgba(255,255,255,0.25);
+    color: white;
+    position: relative;
+}
+
+/* TEDDY GIF */
+.teddy {
+    width: 120px;
+    margin-bottom: 20px;
+    animation: teddyBounce 3s ease-in-out infinite;
+}
+@keyframes teddyBounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* BALLOONS */
+.balloon {
+    position: absolute;
+    bottom: -120px;
+    width: 40px;
+    height: 55px;
+    border-radius: 50% 50% 45% 45%;
+    animation: rise linear infinite;
+}
+@keyframes rise {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-130vh); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="center show" id="content">
+    <h1 id="question">Are you ready?</h1>
+    <div class="options">
+        <button class="good" onclick="nextQuestion()">Obviously</button>
+        <button class="ok" onclick="nextQuestion()">Yes</button>
+    </div>
+</div>
+
+<audio id="music" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_8e5a64c74b.mp3" type="audio/mpeg">
+</audio>
+
+<script src="teddy.gif"></script>
+
+<script>
+/* HEARTS */
+function spawnHeart() {
+    const h = document.createElement("div");
+    h.className = "heart";
+    h.innerHTML = "❤";
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.fontSize = 14 + Math.random() * 26 + "px";
+    h.style.animationDuration = 6 + Math.random() * 6 + "s";
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 14000);
+}
+setInterval(spawnHeart, 200);
+
+/* FLOW CONTROL */
+let grown = 1;
+let growInterval;
+let satisfactoryStage = 0; // 0=Satisfactory,1=Just above,2=Good
+let okButton;
+
+function fadeOut(element, callback){
+    element.style.opacity=0;
+    setTimeout(callback,600);
+}
+
+function fadeIn(element){
+    element.style.opacity=1;
+}
+
+/* NEXT QUESTION */
+function nextQuestion(){
+    document.getElementById("music").play();
+    const c = document.getElementById("content");
+    fadeOut(c, ()=>{
+        c.innerHTML = `
+            <img src="teddy.gif" class="teddy"/>
+            <h1>Will you be my valentine?</h1>
+            <div class="options">
+                <button class="good" id="goodBtn">Sure</button>
+                <button class="ok" id="okBtn">Not Sure</button>
+            </div>
+        `;
+        fadeIn(c);
+        const good = document.getElementById("goodBtn");
+        okButton = document.getElementById("okBtn");
+
+        // Very good grows over time
+        grown = 1;
+        growInterval = setInterval(()=>{
+            grown +=0.02;
+            if(grown<2.4) good.style.transform = `scale(${grown})`;
+        },300);
+
+        // Satisfactory dodge & click
+        okButton.addEventListener("click", handleSatisfactory);
+        document.addEventListener("mousemove", e=>{
+            const r = okButton.getBoundingClientRect();
+            const dx = e.clientX - (r.left + r.width/2);
+            const dy = e.clientY - (r.top + r.height/2);
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if(d<120) okButton.style.transform = `translate(${Math.random()*200-100}px, ${Math.random()*200-100}px)`;
+        });
+
+        good.onclick = finish;
+    });
+}
+
+/* SATISFACTORY CLICK */
+function handleSatisfactory(){
+    satisfactoryStage++;
+    if(satisfactoryStage===1){
+        okButton.innerText="Let me think";
+        okButton.style.transform="scale(0.9)";
+    } else if(satisfactoryStage===2){
+        okButton.innerText="Please!!!";
+        okButton.style.transform="scale(0.8)";
+        // make button keep dodging and not clickable
+        okButton.addEventListener("click", ()=>{});
+    }
+    okButton.style.transition="transform 0.4s ease, opacity 0.4s ease";
+}
+
+/* FINAL CELEBRATION */
+function finish(){
+    clearInterval(growInterval);
+    const c = document.getElementById("content");
+    fadeOut(c, ()=>{
+        c.innerHTML=`<h1>Lots of love sanu 💖</h1>`;
+        fadeIn(c);
+        confetti({particleCount:280,spread:220,origin:{y:0.7}});
+        for(let i=0;i<14;i++){
+            const b=document.createElement("div");
+            b.className="balloon";
+            b.style.left=Math.random()*100+"vw";
+            b.style.background=`hsl(${Math.random()*360},70%,75%)`;
+            b.style.animationDuration=(4+Math.random()*4)+"s";
+            document.body.appendChild(b);
+            setTimeout(()=>b.remove(),8000);
+        }
+    });
+}
+</script>
+</body>
+</html>
+
